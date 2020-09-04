@@ -1,0 +1,469 @@
+<!Doctype html>
+<html lang="ko">
+
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+              integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+              crossorigin="anonymous">
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+                integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+                crossorigin="anonymous"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+                integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+                crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+                integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
+                crossorigin="anonymous"></script>
+
+        <link style="text/css" rel="stylesheet" type="text/css"
+              href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css">
+
+
+
+        <!-- 구글폰트 -->
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Recursive:wght@600&display=swap" rel="stylesheet">
+
+        <title>Bite A Bit </title>
+
+        <!-- style -->
+        <style type="text/css">
+            * {
+                font-family: 'Noto Sans KR', sans-serif;
+            }
+            h1 {
+                color: #222831;
+                font-family: 'Recursive', sans-serif;
+            }
+            .lead{
+                font-size: x-large;
+            }
+
+            .card-image{
+                width: 100%;
+            }
+            .card-english {
+                color: #222831;
+                font-weight: bolder;
+                font-size: xx-large;
+            }
+            .card-korean {
+                color: #222831;
+                font-size: x-large;
+            }
+            .card-memo {
+                color: #4f8a8b;
+                font-size: x-large;
+            }
+            .jumbotron {
+                background-color: #eeeeee;
+            }
+            .post-search {
+               margin: 20px auto;
+               text-align: right;
+               font-weight: bolder;
+            }
+            .wrap {
+                width: 685px;
+                margin: auto;
+            }
+
+            #post-box {
+                width: 500px;
+                margin: 20px auto;
+                padding: 50px;
+                border: black solid;
+                border-radius: 5px;
+            }
+            #search_icon {
+                border: none;
+                background-color: #ffffff;
+            }
+            #delete_card {
+                margin: auto;
+                padding-bottom: 10px;
+                border: none;
+                background-color: #ffffff;
+                float: right;
+            }
+            #edit_card {
+                margin: auto;
+                padding-bottom: 10px;
+                border: none;
+                background-color: #ffffff;
+                float: right;
+            }
+            .button {
+                margin: auto;
+                width: 18%;
+            }
+            .fas fa-times{
+                font-size: larger;
+            }
+
+
+            a{
+                color: #222831;
+            }
+        </style>
+        <meta property="og:title" content="Bite A Bit" />
+        <meta property="og:description" content="하루 한 입씩 공부하는 습관.
+                                입력한 영어표현에 관련된 상황을 짧은 동영상을 보면서 공부해보세요." />
+        <meta property="og:image" content="{{ url_for('static', filename='ogimage.png') }}" />
+        <script>
+            $(document).ready(function () {
+                $("#cards-box").html("");
+                showPosts();
+            });
+
+            function openClose() {
+                // id 값 post-box의 display 값이 block 이면(= 눈에 보이면)
+                if ($("#post-box").css("display") == "block") {
+                    // post-box를 가리고
+                    $("#post-box").hide();
+                    // 다시 버튼을 클릭하면, 박스 열기를 할 수 있게 텍스트 바꿔두기
+                    $("#btn-post-box").text("Write a memo");
+                } else {
+                    // 아니면(눈에 보이지 않으면) post-box를 펴라
+                    $("#post-box").show();
+                    // 다시 버튼을 클릭하면, 박스 닫기를 할 수 있게 텍스트 바꿔두기
+                    $("#btn-post-box").text("Close");
+                }
+            }
+            function postMemo() {
+                let post_eng = $("#post-english").val();
+                let post_kor= $("#post-korean").val();
+                let post_memo= $("#post-memo").val();
+                if (post_eng == "") {
+                    alert('공부하려는 영어표현을 입력해주세요.');
+                    $("#post-english").focus();
+                    return;
+                } else if (post_kor == ""){
+                    alert('한국어 표현도 입력해주세요');
+                    $("#post_kor").focus();
+                    return;
+                }
+                $.ajax({
+                    type: "POST",
+                    url: "/post",
+                    data: {post_eng_give : post_eng, post_kor_give : post_kor, post_memo_give : post_memo },
+                    success: function (response) { // 성공하면
+                        if (response["result"] == "success") {
+                            alert(response["msg"]);
+                            window.location.reload()
+                        }
+                    }
+                })
+
+            }
+
+            function fn_delete(post_image,post_url,post_eng, post_kor, post_memo) {
+
+                 $.ajax({
+                    type: "POST",
+                    url: "/delete",
+                    data: {post_image_give: post_image, post_url_give: post_url, post_eng_give : post_eng, post_kor_give : post_kor, post_memo_give: post_memo},
+                    success: function (response) {
+                        if (response['result'] == 'success') {
+                            alert('성공적으로 삭제되었습니다.')
+                            // 3. 변경된 정보를 반영하기 위해 새로고침합니다.
+                            window.location.reload()
+                        }
+                    }
+                });
+            }
+
+
+
+            function showPosts() {
+                $.ajax({
+                    type: "GET",
+                    url: "/post ",
+                    data: {},
+                    success: function (response) {
+                        if (response["result"] == "success") {
+                            let posts = (response['posts']);
+                            for (i=0; i<posts.length; i++) {
+                                makeCard(posts[i]['post_image'],posts[i]['post_url'],posts[i]['post_eng'],posts[i]['post_kor'],posts[i]['post_memo'])
+                            }
+                        }
+                    }
+                })
+            }
+            function makeCard(post_image,post_url,post_eng,post_kor,post_memo) {
+                let temp_html = `
+                <div class="card">
+                    <img class="card-image"
+                         src="${post_image}">
+                    <div class="card-body">
+                        <p class="card-english"><a href="${post_url}" target="_blank">"${post_eng}"</a></p>
+                        <p class="card-korean">"${post_kor}"</p>
+                        <p class="card-memo">${post_memo}</p>
+                        <button id="delete_card" onclick="fn_delete('${post_image}','${post_url}','${post_eng}','${post_kor}','${post_memo}')"><i class="fas fa-times fa-2x"></i></button>
+                        <button id="edit_card" onclick="editCard('${post_eng}', '${post_kor}', '${post_memo}')" data-toggle="modal" data-target="#exampleModal" ><i class="fas fa-eraser fa-2x" ></i></button>
+                    </div>
+                </div>`
+                $("#cards-box").append(temp_html)
+
+            }
+            function editCard(post_eng,post_kor,post_memo) {
+                $('#exampleModal').on('show.bs.modal', function (event) {
+
+                    var edit_card = $(event.relatedTarget) // Button that triggered the modal
+                    var modal = $(this)
+
+                    modal.find('.modal-title').text('수정할 내용을 입력해주세요. 영어표현은 수정이 불가능합니다.')
+                    $('#new_post_eng').attr('placeholder', post_eng);
+                    $('#new_post_kor').attr('placeholder', post_kor);
+                    $('#new_post_memo').attr('placeholder', post_memo);
+
+
+                })
+
+            }
+            function fn_edit() {
+
+                var post_eng = $('#new_post_eng').attr('placeholder');
+                var new_post_kor = $('#new_post_kor').attr('placeholder');
+                var new_post_memo = $('#new_post_memo').attr('placeholder');
+
+                var new_post_kor_1= $('#new_post_kor').val();
+                var new_post_memo_1= $('#new_post_memo').val();
+
+                // new_post_kor_1 : 새로 받은 값
+                // new_post_kor : 기존 값
+
+
+                if (new_post_kor_1 == "" && new_post_memo_1 == "") {
+                    var post_kor = new_post_kor;
+                    var post_memo = new_post_memo;
+                } else if (new_post_kor_1 == "" && new_post_memo_1 != "") {
+                    var post_kor = new_post_kor;
+                    var post_memo = new_post_memo_1;
+                } else if (new_post_kor_1 != "" && new_post_memo_1 == "") {
+                    var post_kor = new_post_kor_1;
+                    var post_memo = new_post_memo;
+                } else {
+                    var post_kor = new_post_kor_1;
+                    var post_memo = new_post_memo_1;
+                }
+
+                 console.log(post_eng, post_kor, post_memo, '1');
+                       $.ajax({
+                         type: "POST",
+                         url: "/post/edit",
+                         data: {post_eng_give : post_eng, post_kor_give : post_kor, post_memo_give : post_memo },
+                         success: function (response) {
+                             if (response["result"] == "success") {
+                                 console.log(post_eng, post_kor, post_memo, '3');
+                             alert(response["msg"]);
+
+                             window.location.reload()
+                             // showPosts()
+                             }
+                         }
+                     })
+
+            }
+
+
+
+
+
+
+
+
+            function fn_search() {
+
+                $("#cards-box").empty();
+                let post_search = $("#post-search").val();
+                if (post_search == "") {
+                    alert('찾으시려는 표현을 입력해주세요.');
+                    window.location.reload();
+                }
+                $.ajax({
+                    type: "GET",
+                    url: "/search",
+                    data: {post_search_give : post_search },
+                    success: function (response) {
+                        if (response['result'] == 'success') {
+                            let search_result = response['search_result'];
+                            for (let i = 0; i<search_result.length; i++) {
+                                let post = search_result[i]
+
+                                let post_image = post['post_image']
+                                let post_url = post['post_url']
+
+                                let post_eng = post['post_eng']
+                                let post_kor = post['post_kor']
+                                let post_memo = post['post_memo']
+
+
+
+                                makeCard(post_image,post_url,post_eng,post_kor,post_memo);
+                            }
+                        }
+                    }
+                })
+            }
+        </script>
+
+    </head>
+
+    <body>
+        <div class="wrap">
+            <div class="jumbotron">
+                <h1 class="display-4">Bite A Bit</h1><br>
+                <p class="lead">하루 한 입씩 공부하는 습관. <br/>
+                                입력한 영어표현에 관련된 상황을 짧은 동영상을 보면서 공부해보세요. <br> </p>
+                <hr class="my-4">
+                <p class="lead">
+                    <button onclick="openClose()" id="btn-post-box" type="button" class="btn btn-dark">Write a memo
+                    </button>
+                </p>
+            </div>
+            <!--     Modal      -->
+            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">한글표현과 메모만 수정이 가능합니다.</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form id ="modal" >
+                    <div class="modal-body">
+                        <form onsubmit="editCard(this.form)">
+                            <div class="form-group">
+                                <label for="new_post_eng" class="col-form-label">English Phrase</label>
+                                <input type="text" class="form-control" name="new_post_eng" id="new_post_eng" placeholder="default" readonly />
+                            </div>
+                            <div class="form-group">
+                                <label for="new_post_kor" class="col-form-label">In Korean</label>
+                                <input type="text" class="form-control" name="new_post_kor" id="new_post_kor" placeholder="default" />
+                            </div>
+                            <div class="form-group">
+                                <label for="new_post_memo" class="col-form-label">Memo</label>
+                                <input type="text" class="form-control" name="new_post_memo" id="new_post_memo" placeholder="default" />
+                            </div>
+                            </form>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="edit_submit" onclick="fn_edit()">Submit</button>
+                    </div>
+                    </form>
+                </div>
+            </div>
+            </div>
+
+
+
+            <!--     form       -->
+            <div id="post-box" class="form-post" style="display:none">
+                <div>
+                    <div class="form-group">
+                        <label for="post-english">English Phrase</label>
+                        <textarea id="post-english" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="post-korean">In Korean</label>
+                        <textarea id="post-korean" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="post-memo">Memo</label>
+                        <textarea id="post-memo" class="form-control" rows="1"></textarea>
+                    </div>
+                    <br/>
+                    <div class="button">
+                    <input type="button" class="btn btn-dark" value=" POST " onclick="postMemo()" >
+                    </div>
+                </div>
+            </div>
+            <!--   검색     -->
+            <div class="post-search">
+                    <input id="post-search" type="text" />
+                    <button id="search_icon" onclick="fn_search()"><i class="fas fa-search" ></i></button>
+            </div>
+            <!--    피드시작      -->
+            <div id="cards-box" class="card-columns">
+                <div class="card">
+                    <img class="card-image"
+                         src="https://i.insider.com/5e8c974115ea4b3757538668?width=1800&format=jpeg&auto=webp"
+                         alt="Card image cap">
+                    <div class="card-body">
+                        <a href="#" class="card-nickname"></a>
+                        <p class="card-english"><a href="http://www.naver.com" target="_blank">english phrase</a></p>
+                        <p class="card-korean">in korean</p>
+                        <p class="card-memo">memo</p>
+                        <button id="delete_card" onclick="fn_delete()"><i class="fas fa-times fa-2x"></i></button>
+                        <button id="edit_card" onclick="editCard()"><i class="fas fa-eraser fa-2x"></i></button>
+                    </div>
+                </div>
+                <div class="card">
+                    <img class="card-img-top"
+                         src="https://s1.dmcdn.net/v/Pax1q1SVCWhI1oB6J/x1080"
+                         alt="Card image cap">
+                    <div class="card-body">
+                        <a href="#" class="card-nickname"></a>
+                        <p class="card-english">english phrase</p>
+                        <p class="card-korean">in korean</p>
+                        <p class="card-memo">memo</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <img class="card-img-top"
+                         src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxMSEhUTExIVFhUXFxgYGRgXFxgYGBkXFxcXGhcXGBgYHSggGB0lHRcVITEiJSkrLi4uFx8zODMtNygtLisBCgoKDg0OGhAQGy8mICUrLy0tLy0vLS0tLy0uLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLf/AABEIAK4BIQMBIgACEQEDEQH/xAAcAAAABwEBAAAAAAAAAAAAAAAAAQMEBQYHAgj/xABEEAABAwIDBQUFBQUGBgMAAAABAAIRAwQSITEFBkFRYRMicYGRBzKhsfBCUpLB0RQjcoLhFTNTYsLxQ2NkdJPSVKKj/8QAGgEAAgMBAQAAAAAAAAAAAAAAAwQAAQIFBv/EAC4RAAICAQMDAwMDBAMAAAAAAAABAgMRBCExEhNBIlFhFJGhMnGBYrHB4QUVI//aAAwDAQACEQMRAD8Aw5BBBQgAupXKChBQFdSkwugVEQ7JXBKBK5WiHUronJcAJZ1FwbJa6OcZKjSyJyu2HMJMJSnqFZpC1R2fquAUbjn6rlUi3yKNKXaU3Ylwoy0Prcpy85hM6B/NLvf3vMfNCYdPYdPfmV3Qd9eSbh0kylKZWTYq5/fPiiL0mH94+P5Ii5QpDkPRY03xrk1FMF5HbaySZVzKQFTNJY9frmrwTJ3WqJvUq5fXMJOpUSD3QFrANyHprZBJdtKTc5IyqI5D91aEga2iTqO+SRL81EjcpjmtXyd4D81G1KiWq1MimjzmtJAJzywSuHFHK5WwLYJQQQVGQIIIKEAgggoQNGCiRgqFAKeWNnjkuOFozJSNtbl55AalO7i6hoawkAZZcep5qpN8ILCK/VIf7H7AVBiALAdDlPiToFeN596R2VL9mtadMMMNcWsh2RDmd33mnqTORyWYtYQQ6RHNsEj+VK1Lg/4mLOQSCB6Qhyry8hlZhbmjbD2jsq8LGX1o2jUdpUYcDXebfkdFN7x+xyk6g6ts+o97h3msc4OD2/da7g7lOunVY42q2cRl5mY0bK0rcu9u8TH214y3gDFSqt/cuGfBpJ0jOBxOWQQ3HoeU9isuS+TNLqi5ji1wLXAkEEQQRqCDoUiCtx3muLLalK4p1W06V9Ta0iowS12YDXAkBxaSQCCJAMrDT8UeE+oHJYFGlLNKbtKWBW2RDum7JLvfLvRM2u0Szn5+nzCGwyY5puzSofA+uSZ035lKdoqwaTFS/vHqui+E1Dsyh2imCJjnGknuzXLHJJ9RRFtixck5Mny+RSYqLUfZTuU17DfXdOaP/DB+1HdLiNcIPyVSkorJlszm02VWrQKdN7pMCGkjPwV33d9k11cGarTQaOLyAT4MEn1hbrQbQa2abWNgSMIDclRd598wCeyDmPaYxtcAMjm14OoQJ348/YkIynwvuMafsVpBpDrkkn/liB6ulV/bXsZuKYLqD2VY+zJa70OXxUtsfeyuXy9zntdo2YnPUfd+Cldvb1PbQlkgmfdcZHj16TCB9U84x+Q301nOU0YbtfZVa3cWVabmEcCD6qLDs1sez9rU70GheuxscBheYxMnQg8vHRZ7vzuq+wqgSH0n503jiOR5FMU3qT6JbMxbU1uisPOqTeUbjmuCmxJsJBBBQyBBBBQgEEEFCAQQQUIGjCILum2SrRQvihoYOOZ+vBIufPCPNG7j5BEQVEbbOIRwg8RqIK7aJVlYFLGmXva0Aa8dFZf7PrlhBpkjRpzkD9Fxufs3FUBha/Z024AMI9EhqdT25YSOrpNJ1V5kZNunYvbWc2HSRhnjBH16Ku7U/vquv94/XM+8eK3neq2bbbPrXlDC2tTwGSAdajWEeYd8lgLySSTqTPmdUXTTdmZi2oUY+heAqbV25BiJxTIsLtcjDs/NJtK6ae8ss2mKtdmUq1ybNd9eSUY7RZNJhh/ejxXROSRBzXROihqLFcSSKMlcOUNMMPjNejvZZtBtbZdFpzDA5jpAjImAIPUa8l5vaJMc8h5rcvZ/bC1szTNWXPioREYWxprrmltXLphkuEOt4JC+DqdQ9m8gEYY4cmkT4hUPaVqcTgc8Z465iPrwV32jcNe0YXDxzHzVX22/MyIMj4mFyqZNM7HR6dyBtqpaS2YgyDyPI9DHwU/a34INPVx1Bzj659VXKlZpqRwdkT18Vyyp2VVriZAIB54eDhzhNSrUgSl0kbeB1KqC2YBMeubT9cFcm4b23NCpylhPA9EW2NnMe3GB1PWdfHmm2y39mR01ji3g5v6KSsU4prlFKrpbXhmabUsX0ahY8EEE+aYla/v9sVlxQFemAXDUjX4ahZFUbBI5Loae5Wxz5ORqKe3L4OEEEEcWCQRoKEAgnNSkD7rXecR6pPseZ9M/iqyacWhJdAIy3hGfxUjsnYVe4qNp06ZLnHgJIE5kjkFHJJZZSTfBHQjp6rYLn2NUw1uC7qggd8uotc0mNWYXZCecps32d29AZn9ofIkvLqbQOQZTIJ/EEH6mv3CRpm/BlLp+KndyKDX3bMeYaC4A6SBl+vknW3t3Cx7uzacPAHPxRbB2Y5jxUBILTyVysjKt4YzRppxuj1LZMm9v7PZc1akziphsTEkGZMjUSRAzVf2HsUVLjs84BzlaTaVmOh4EOLcLp5aj4zmkdhbAZRe54diLjOfUyUlHUuEGvsda3SRnYpY87ktsvYrKLe43h5ohtFzXYGtpF2sOqAOI6AAqXti0iDxTerbUg6cPQDgM9Ul1Jv1BnnhFf9pO8bW7NNs5uCtXLe5IOFlOo15eY0BLQBzk8lj2FbfvX7O3XLHXtHC95aC6kWAuOBob3HHUwJwmFlGJnGl/+QXX02I1rHnc4dsOuxvJDoyp2nUoDJ1M+dFO7c2rv+E7L/p3H5FG7nwD7PyVlgXROattI7OOTgWn/t3/AJFO6dPZZ4O0+zbVfjmsOz4NdvHko9MZpQaq/lmyGj7c/wDa1h/rC4ps2O451MMf9PX+P7xV3PgtQXuUHkuxKvNSlsg+7UB00t64gc/7zqm9a22b9moJ6064/wBarufDNKC9ymZyicrQ+2svvs9K3/smdShafeafDtPlKtT+COv5IJpwkHkQfQrZtxra4q0/2jsyyk0e+8nvjP3ARmOoyKifZ3utbPm9qsDqNJ0NBLiH1BzB1a3I+PgVp+0b9t1buFs4OIAmmCNG8Gxx0y6JTU3QknHyEqjKMk1xnd+CpVqNQvdDu4c8PXOcwJ+Kre8ry3L6kaK42xcWEO94E+nXqqzvBa4g4Ln1y9W52XHKaKZ2ZwnnII9B/Rd1qoe0OjMag9dV1tB2E68fyhRtzdctTkRzn61XSiurcQniJaN3dr4qQa7Msdgk8W/Z+GXkmlCvieWtcA0OyPFhkxPNqj7NppU4+1BPiSoF1d4fAdBnX9VUaVJyaKlc4Rjk0Sg17QZPcOTmngf04rPd4tnllVxGYnXxVp2RtqoKcVGgjSePQymu2GCCHOkHTuzAPHpqqo6q5tMmojGyCwUVwRJ5dWRDiAQ4A8MvgU2NMjIgjxXRTTONKEk90cIJTska0Z6WSAol32SD95xgeQ1XTbMEw5xPgICcVKWKACenMFWjc3Yva3bGvzYzvO5OAjLzMJOVvSsnS7SZMbl+y59y1tWu4UaOow++8cxOgPNbFsTYNraswUKbWjidXO8XHM+ajze8BoNAOQ4AJUXkCZyGvNJO5y5Bzg2Ste3pu1bPjwUBtHZ9Pg3Lpn8YSjdoSe8SByAxDz5lG+5acsVN3lhd5TkqzkqKcSo7Qs2EHDBI1EQ7+YHPzUK2g3gFe61FjzMZjQ8fxDIiOCre2dm9m4Fuh05eH1+SjWeDpabUY9MivVK+B8FTNg+eqj7uxNQhrQS45CMzKeDY1zaUxVrNApyATibILtARM5q3DqjsOSujCXTJ8k3b5DPgoLbW1oeMDXPjk04c9CdJUjRvGFslwjiPFVOpdh96KLGgMBJMEmYaSJ80OuGW2/BTlg2bYW0aVOkwB5cXAHOAZjMRJj4rEd/aVOltCuKLYYH4iOAcWhzh4SSfNaHudZtYZHqdVQd9beb+u6JHaumdBHTjojaa1uTi+Ec2VKja8c8lcLpI6jgfUFG4lrDhETEwdB1Ep0GsbLnNmYEggHPOWjyTmpT7jnPxFkAgDuzidABMZgZeaacgsYkRRZJGfLU4cz1/Mp6ajiAGgaSeYMnIDjOSVs7QT2gjABmHQczIw9fHgne0S4EPGEYX4HHDoSMnHmI9IWZT32N9vfpZGVLyrlkBlwg8ePJFVcC4FzcwM2zx4T5QnttbF5Ag4CxxJBkEs1cOXDLqk69tTbm3IS0STIMjJxHxVdSNKCXA0PvuNMHCGkkiTE/MTARVqFVgFR2eWfOOXIKbvHU6eGmGk4ZyGQJIyLuJJIJCiW7SOBzXAEudEf5eM/kom3wjCy9xve1e6CCc4IM8h9eCcWdsXVqdGmQ5z3taOObi0SfX4Jq2zc0YXD3hLc/tA5iOBzKv/s22G193+0EZUmYyIgCo+QweQxHyCk5qEcgp5WWWjbxbb0G29PRjYA5n7Tz1JknxVF2c0201G1sLyZcMUN8wfmp/e+9IqOPQ+nFZhXBe4vJJBknnA4dEnp63NPL5HE1VWljJqewLgvdUh5LQ6AMiMwDIOuhC52u3I8zl6rM9k31egS6g8tB94GCMtJGnHJals/Z9QU6LrtvfqNBLRkWl5IpyOc4SQquodb6vBa1EXLD5KFvJbR3gMjp4qstdhqUyef6rUd49nzUptLe6C6f4gI/VUG42YTXLY0JPomdPanHDA6itv1REn7SHaCWyNI5Z5IbW2eKuGoxpB0MEQeuZVi3X9nla4mrUHZ05yLsi/P7I1A6q43mybe3aBUtDhyGNk1G/zDNw9FVmohCSUN2AS68qZm9lb1qLcmiozMkAzrzGoUlZ1qdxTc1zYc0d2dR0PzHgrhcbBY1zX24POBmJj3fPJQdzQaKgxANLgTlrIkHLpqg99T3xuNwrwtnsUm52LUxAtLoj/iCJPIEJpUxUzgqNIjWII/P5K7XbajG642wf95PgoCyt8VQl2E8AHZgkic4TkLm1lg/pVl42IjHS5N9EFYP7Kq/4dP0RLXdiZ+n/AKl9v9kPZiHtPCcjqtM3Vtexp4zq8DyAH0VT92dkGq+niHdHeJ0yBy9cvitAucshwSd8+qWAeFjI/ZfSnTbmSByz0z6fD5qEpnRPKDiZzIOZ5+Cx07AmSdN7eo9fySzarNCfKJ80wZXc095mKIzb+mqdUrljtCAZ0dl81aRhjunaUzm0A58DC5urLGwtzcRmJ1nxXDreYxA+ro9Ql7azBiC4dRn8RkVoyRG65qU9puo1AMFS2bUpGIdOIhwJ4mR8lYrNtvd1LihUpCoG1s8Wks0jOZBn4qLu2GjfW9V57raVYz0GEkfH5qq7u7ZqNqhziQx7i4ta4tBc4kkuwwTqnIy2yAcZSeckX7UdhusrmaYe2hV7zCNGu+1TnpqOh6KA3Np/vnPJ0aR5kjM9SJW+bXs6O0LV9F+jh3XEe68e64eB9cxxWM2eyDaF1J5HadocRaZENJDY6Rn5qW2QcH0+RvSOU5YlyjQN2OAVD3vaTd3Bbhlr3kzxghXzdwRCzbfeDe3MgBwqECJ7wOk8vHikdMszYza8WP8AYhD3nNkAumDJjLLLy5qXr3gd+71cABHAzEtOnQ5cVEWozzPAloLolwGh+uC6a95BeQ1xESeOc+qckslRltuP6Nu4MAmZd7uXdeTlHMZR8U9r2zQHNxZvqZmIjCZ7o+E6KPZcR75GTRnyByEAcM/givNpQ4ZB2GRnMa5HNCxJsK3nG5J1rksc2i1sBxLoBEgEzn5/kmdSmaIe49mA45tOYdnmIjVIftLe1ZUcIJEEEzB0DvRM7y6ABxMGIkwZyDeitQeTKZIU7gBjqhaNMIyLizlM5nIqDwjMkgjWRqRPD4pw9zhTAJydqOf1MJmyq1pxa8MM5cJlGisZBSbxnwSL3kvYO7hxdw8YI9eRM8ZWy7k2TqNiHP8A7yqTVd4HJg8mBvqVj+xqRrXFOm0uPavwg5dwHuk+IBPot32gQ2nhGQAgDoBACQ1ssJRMS9UkjLt9K3dqHpHqQFVHXAAa0gDKQOXQ8CCJHkrHvUMTDJgF7QfUpLcfdCrtCr324aDCA55GgH2GHi4/CZ8Tadega1U1F78Iunso3Qb2Tbm4osHexUdZIGj3CYInSROU8lK707RHbAcGPD3HwPdHoyfNSe2dq06DBQpQ0MADI0GHLD6KgbwbXYA4udDqj2tEZ5lpE+UFDts7noiK0Qk5d2z+CQtKTnWlOpWOI1sdSPutdUd2Yn+EBJbF3bFatje2QwjXQ8Y6j+ildpVwQG0W4gzs6LG6e6xsg8oLjPgrNsiy7Km1pieJGk8UpOWG+kYla4UrPLHTGQE0vWyQAfJPnOTd0aoIjB75KxtWwqWxNzaS54H7yiT3arBn3R9l44HjoVUdqWJrWn7UMjPaNPJrj7p665dFpV0cs+qz67pU7cdk97m0rhzsAPutrETh6BxE+J6o9cs/uv7DdUmt3x5KxZvdcU8GQLZBnTOIPRO6+71RrHFoY8MElrXDEBGZ6jMZ9UVlS7B5a6DjHOOKkhfPaxzKORe3CSczhdkYyTLk0/TwO+pRKz27v+X6IKb/ALFZyPoUSL1xK7kvckNh08FEc4GXl/uuqt5Mpu27ygaFI1Gyfr1S8I75YhORJW1WfMx5kwppgiNR46Kl3tbC0TORmR045KY3d3hbVbgc4Fw1iMxGRRnF4yB6vBY214yBII5aJbI+80ETx1Tfsmxln0B+aUbA4t+vFYXwRjqjbicpb/C4wpCyp1JEVXeYDvyyUJb7RYXYabsZGuGCB0LtPLVPmVHDVxHh+pVSn08lqqUlsWW72ULig6nUdmWuaH4YLS5pbI56+ayqlaOs67qFUd9pydwc06PbPA/qOC0/Zd0wePMkk+pSO9e7dO9YHNIbWYO4/n/kdzafgmIWRth0rkDVJ0W+vgrlDaDmslp8lRrBxqOxHMkknzMqeoOcwmm8FrmkhwPAhRmxKMOc3k53pJhKpdOTtxiuUXbYDcgsg3zug6/ujOXauH4TEfBbRsRq88X1yatWrUEEOqPd17zifzRtDHMpM52oniZJU7hpaZjTOekaRwTW0f8AvGg5gnMdEiwZFSFjY1azmtosL3uyAaJPWOQTzWDKsWByKpLYAIENGWQydzhM6ze8ScuP1CvVh7KL+qB2pp0h91zpI8mAj4qRqeyG4wwK9EnrjGX4SsqDXgz9RX7maswzBE4hIg+7qiD4b3QIke8AT5HyWg2XsquadWaoY9gBjA/IukAAzhMa6RopW73CZgeTbd3H3RSJLg3vAkk1iCR3TpzyM5Zls+Cd+OeTH7mvJlxJyjw8kycIJMiPQnolyySQeBTUUpmeBRog7ZpsuvsrtsV+x0d1jHu84DRP4lru1H9xZh7Hrci4rGdKYA/meP8A1WmbSd3YXG1rzcNULdFY2Psald1zSruhnvkcXR9kHhrr0K0G4vqFrTFKk1rWtENa0QAs42a+LkkfYB/EdPhKU23tExM5j/b5Ku5NLoj5GrtIrrVKT2I7em+JFR2uF7XHX3ZzHzVD2s6qb6nSbL3GozA3mXkAN8yp26unudVonC5rqTnBxcAIbnBLiBME+KS3E2VWvr6jcUyWtoYXVKkZNc33Wjm4/JOULtrqlwC10k49EWalsev21avUYAGiu/C6MiQGtcW88w4Sppt+9v3Xf/U/DJI1Q1ndaIHTL5JrUcOa5MpdUm0ZUFNLJJnajB7/AHOrvd/ENPOE9bGR/rPgqld3YAIMRGazzY++Rtr/ALKlcAWxJBY+TTxEZBn3M+IyRqqZWJ48ArqVWk8mpbUvGmpgnTkqd7VaPaWJIbHZua4c8jBPTJO6Nwxp7R1em2cyXOBPzVE9oG/AqtNtbvxMOT3jQ9G8x1R9PTJ2Lp8FWuEIbvwHuzdNvKWFzj29IlxBOb6Z4jmRx8U+2ff4SAM3YgOgg9dFmlhevo1G1Kboc0yP0PMFaIy5o12OuKfuvEvb9qnVAzaeY1IPEFO309Es+H+Dej1Pcj0S5LN/ah+580FE/wBs0vuu9ESB0/AfoZFW9wZUoKiqFldyOasNg/EOAAzLiYaB5okodIgp5H1SmHAifoqn7Rp1bWr2jYAnwBHIqzu2kwd2j33H7X2f5eLlB7beCSJxVDMu4M6NGmLqjVezA2brYuFHeqiy2bWe856NGbi4aiPHiqDvFvhXuCWt/dU/us94j/O7U+AgJCjZYYJzaDPimG0KIDnOAgTkNdeCNVVCLyBtsnJFx3D3o7NooPy+6efTxWi0NpB3FefGvgzyV43Z3jLu4494D8Q/VL6nS5fVEf0WrTxCf8Gs295nqp7Zu1IgErP7O9kDNSVtdQdVzJQa4OlZp42It+8uwhdN7SlArAeAePunryKz19N9KrD2FjuIcIPj1V82LtfQEqT25smneUg05OBBa4aj+hRoz6+eRCF09M+3PeP9iv7GBqtdTY6Kj6bgCdGyCA4x4hQ2zPYvbMH725q1Dp+7DWDL+LEVb9jbMt7eqaDKpFTC17u93ngE5CdADBMcwpcXtMVHMxjWfPLj9apuqPag88tiWot7lmYcFVsvZhs5pzo1X9X1HD4NhWTZuwaFm0/s1HD/AJQ50EmMziJzyGZ0UqwjgUBEzPTX6zTkY+kVc2yPqbSexj31KDgGtLu6Q4mOAA4qIZvxROQo155YP6qevqhEYZLoMAaHhmOUkKl7FpXg7d9NvaPD2HDUPZmYlwALTGuhI4IUpTTwmEgotNtFqtrs1x36L6bJBBLiHTIj3dPVSWCBkB9aqsUt7Yc2ncUTQcdTVkN6YSJa7OOKn6W0Kbsg4dJynwnVajOKzl/4MSi/CK5eezbZtVznGgQ5xJJbUeMyZJ96E82JuXZWrMFO3Y7MnHUa17zJ0LiNApG+vXNwik0VHkju4gIZ9p/HIZcOIT0uMAxw04q1OMk8FPq8jI7LoMxObQpgxnhY1pMcJaJKy7bG28Ly1wLehEEeRWiX+9FtRDXVarWtdMZOkxkYEZqtXG39n7VqCg6kX0xJ7Z7cIDvuicwDPGOCTsrhbvke0l0qXvHJQrvb1GkC7GOZz4qkbf3pfVyZk3mtZ237NNmvqNp03OBe7DNPMtJ00y9VH2nsLay4BrXOO2AmGjDUJ4NJ0A6jPw1W6q6oZk/AbU66ySxHZP7ld9nm7TtpUQJIbTLmveZgAmYEamCMlsNpZ0LKg23oNDWNHm48XOPEldmrRtqQoW7G06bRAa0QP6nrxUHd3c6rm6i/uSajwEpqnb0ufgWr15MkqM2htJrASTkPkml7ewFle+e8prONKm7uD3iPtHl4K9PpnZLA5dZDTw6n/CFd7t8nViaVEkM0LuLug5BU1BBd+uqNcemJ5266dsuqR2aziA0kwNBwXCCCICyHKkt3b/sa7C49wuAcDoQcpI6TKjEFmSysM1CTjJSRsn7W/wC/R/Agsk/b6n+I/wDEUaU+kXudL/sH7ElSqNo6kPdyGnql2VKtXN0YB5MHlxUdRpBvvZnl+qkKcuIBGQ0HBEaXImm3sSFO4wjDT46v0JHJo4BOqFgB3nafXqhSa1rZI+ui7ALyJ0mENsKGW4s4EDKOijdt20Ngaa/qrBSt8sh3RqeeWZUFtquGyPTwWq3uZnwVJ4S1vcdnmPe4Hkk6mZXEDOT4eKbFE8PJoW6u3BVEOyeInr1Culu6Vk26BBqPbxc3LyKumzdqmmcL8vFczUU+p9J6DRarqglIulu8gq4bAvjEO8lSrG7YYkhWfYdwHODGgGVzpZT2DauKlB7Edv1u3TvMOCsKNam4kVJcHQ4AxLc+PwSexd175jQP7VmOTHP+JcCrVe7m29V7qjnVw52uGs9o0jIAwMgmw3CoD3a92PCu/wDVdZVWNepJnC7kVw2Ql7ZXWFzH31cumBgtq+EgjI42tMeUqw7IrOtqMPbWqEZ4uzOJxjV0xHnwC5buWwaXd5/53JVu60aXl3/5SVaqknlL8lOaaw2Mn7crPMGhVaHRhhpLswcyBpwVk2ZSwskiC4lxHUpnR2FHvXFd45GoQPONVLMYAIGgRKq5KXUzE5LGEc1qLXjC5ocDwIBHoVA3e6dPWg91A8m96mfGm7L0hWJBFlXGXKMRm48FNt6NzZkk2rKgOtSgO9/NTcZ8gVL095qByPag8jRqj/SptFCHGpw/SzUpqX6kVPabW3ThhsO1LRDX1mhjQDyDs/guKW6tZ4h1SnQbrhosGX8x/RXBBV2E3mTyaVzX6diB2Zunb0XCp36lQZh9RxcQeg0Hoj2/XcDhHEKdUJvE0gBwY52R90THKQM0DXV/+L6Ub0882rqKneFQl9eNaCT81GbxbyuY8sFKoXgaEYfiVS9oX9esCXOwySA0a+ZK51OmlLdnoe4oR92cb57yFxNKmf4iD8FSVNP2E4ujGMzqdPUKQqbjV4lr2OnTPIzyK7FbqqjhM4mor1F03JxKqglbu2dTe5jxDmkgjqEkmExFrGwEEEFZQEEEFCAQQQUwQmrO3Bk8lIM1kDguLakM+9GmSkqQp8SDz5+qTchuMdjii0nqeJUpSo5QRh+XimrrxjR3YKb13Vq3vODGcgZWd2XlIc7R2s2C1uIhv3RPqVAXpLsw1xnicvRStBmDJoy6/NcXzn64mj66osMLgHLcr91TFNsHU5wkhs0kTiE8uKSu3y45yeaRpvI0JHmmMMCms7oVovfRe17cnNMg/XBapuzty0vAG1GtbV4tdx8OYWWvvnuGFxDh1Ay84lJNdBkZEcQTkh209xezC139t7cHpbZO5tGoJa0NHRzvkCrZsXduhbHExve+8Z+Elebd2vaNd2hEuNRo4HX14+a1XYHtmtqgArdw8cWXx0SkKu08zTfyt/wGsulYsRlt7cGroKD2dvVa1gCyq0z1UrSumO91wPmmY31vyKuuS5QugiDghKKmnwYDQQlBWQCCCEqEAgilcuqAakLLklyyHaCY3O1aTBLngearW1faLaUQ6H4y3gzvfLJBeqrXDz+wWNM5cIuRcqvvVvnQtGxiBqHINlZ9tX2jVa7XYP3dOMs+9JyHT/dZ7tHaMPc59TMjmS6epOZQpWWWbJYX5G6tNGO82iX2lfOuqrqjpxA6B0AawOpSO0QwUxGEu45CRzLuKrr94sOVMeBjORxUdc7aqPJJOuvD5KR08hp66uO3JpY2xaPo97AHARDgJEDURwVedvLhhocS1uQA0jzVIddErjtjzRFporkWX/Izimor/I+3gve2rGpBEga6mMpP1wUaunuJ1XKYSwsIQnNzk5PyBGgiWjIEEEFCAQQQUIW+nWY7Ls3+hR1XUuLHz1a7L4I3WrGNLjJ8DCjKt/TmGUhPN2aTis8DLlhbj4XNFmYFQ+RRv2w05Cm8+QCiqlZzmx3AOjQExqM8EZVp8gnY/BPVNomPdDernD5BMLm8Lh3j5aD01KjF3hW4wSMObYm5EuiEUIhgJBGAhChZyjCOEUKEFKFw5hljnNP+UkfJTdhvle0vcuH+DocPioAtQhYlXGXKNKco8Mv1p7Vr5urmu9QfgVM23tquG+9RB/n/AKLKUAgPSVewTvz8m0UvbkftW7vJwSw9ug/+M78Tf1WJEIAqvpYfP3ZO6/ZfY2qr7dDwtj5uCZ1fblXPu27R4vP5BZESuSVPpofP3ZO6/ZfY0u89sl8/3RTZ5E/moK99pG0KgINw4fwgBVArgrS01a8E70/ck7nbleoe/Ve7+JxKRO0H5d45JkgEVQiuEZ7kvccOvH/eKbucTxQhEtGctgQQARwoUEgjhGAoQJCF1CEKEOYQXRCGFWQ4QRkIlCAQQQUIf//Z"
+                         alt="Card image cap">
+                    <div class="card-body">
+                        <a href="#" class="card-nickname"></a>
+                        <p class="card-english">english phrase</p>
+                        <p class="card-korean">in korean</p>
+                        <p class="card-memo">memo</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <img class="card-img-top"
+                         src="https://snworksceo.imgix.net/emu/29268fd8-bc36-4b41-bd11-eb4084f36135.sized-1000x1000.jpg?w=1000"
+                         alt="Card image cap">
+                    <div class="card-body">
+                        <a href="#" class="card-nickname"></a>
+                        <p class="card-english">english phrase</p>
+                        <p class="card-korean">in korean</p>
+                        <p class="card-memo">memo</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <img class="card-img-top"
+                         src="https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcR9OOB1ELPuBMaGU0KvgNgUKmbWPwR2xrRpqQ&usqp=CAU"
+                         alt="Card image cap">
+                    <div class="card-body">
+                        <a href="#" class="card-nickname"></a>
+                        <p class="card-english">english phrase</p>
+                        <p class="card-korean">in korean</p>
+                        <p class="card-memo">memo</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <img class="card-img-top"
+                         src="https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcRo-i6RoyPFZDiCC4ScujoC7W1UgQdqh0HZEg&usqp=CAU"
+                         alt="Card image cap">
+                    <div class="card-body">
+                        <a href="#" class="card-nickname"></a>
+                        <p class="card-english">english phrase</p>
+                        <p class="card-korean">in korean</p>
+                        <p class="card-memo">memo</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+
+</html>
