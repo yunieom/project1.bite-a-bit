@@ -1,7 +1,7 @@
 from flask import Flask, render_template, jsonify, request
 import requests
 from bs4 import BeautifulSoup
-from pymongo import MongoClient  # pymongo를 임포트 하기(패키지 인스톨 먼저 해야겠죠?)
+from pymongo import MongoClient  
 
 app = Flask(__name__)
 
@@ -17,7 +17,7 @@ def home():
 
 @app.route('/post', methods=['POST'])
 def post_post():
-    # 1. 클라이언트로부터 데이터를 받기
+    # 클라이언트로부터 데이터를 받기
     post_eng_receive = request.form['post_eng_give']
     post_kor_receive = request.form['post_kor_give']
     post_memo_receive = request.form['post_memo_give']
@@ -67,9 +67,8 @@ def post_post():
     }
 
 
-    # 3. mongoDB에 데이터 넣기
+    # mongoDB에 데이터 넣기
     db.posts.insert_one(post)
-    # 다했다고(성공했다고) 알려주기
     return jsonify({'result': 'success', 'msg': '등록되었습니다.'})
 
 @app.route('/delete', methods=['POST'])
@@ -81,20 +80,20 @@ def delete_post():
     post_eng_receive = request.form['post_eng_give']
     post_kor_receive = request.form['post_kor_give']
     post_memo_receive = request.form['post_memo_give']
-    # 2. posts 목록에서 delete_one으로 3가지가 모두 일치하는 칼럼을 찾아 삭제
+    # posts 목록에서 delete_one으로 3가지가 모두 일치하는 칼럼을 찾아 삭제
     db.posts.delete_one({'post_image': post_image_receive, 'post_url': post_url_receive, 'post_eng':post_eng_receive, 'post_kor': post_kor_receive, 'post_memo': post_memo_receive})
 
-    # 3. 성공하면 success 메시지를 반환합니다.제
+    # 성공하면 success 메시지를 반환
     return jsonify({'result': 'success'})
 
 
 
 @app.route('/post', methods=['GET'])
 def read_posts():
-    # 1. mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기(Read)
+    # mongoDB에서 _id 값을 제외한 모든 데이터 조회해오기(Read)
     posts = list(db.posts.find({}, {'_id':0}))
 
-    # 2. posts라는 키 값으로 posts 정보 보내주기
+    # posts라는 키 값으로 posts 정보 보내주기
     return jsonify({'result': 'success', 'posts': posts})
 
 @app.route('/post/edit', methods=["POST"])
@@ -106,7 +105,7 @@ def edit_post():
     print(post_kor_receive)
     print(post_memo_receive)
 
-	# username 기준으로 메시지를 찾아 내용과 생성 시각을 업데이트합니다.
+    # post_eng 기준으로 메시지를 찾아 내용 업데이트
     db.posts.update_one({'post_eng': post_eng_receive}, {
                            '$set': {'post_kor': post_kor_receive, 'post_memo': post_memo_receive}})
 
@@ -115,9 +114,10 @@ def edit_post():
 
 @app.route('/search', methods=['GET'])
 def search_post():
-    # 1. 클라이언트로부터 데이터를 받기
+    # 클라이언트로부터 데이터를 받기
     post_search_receive = request.args.get('post_search_give')
 
+    # $regex 로 그 안에 eng, kor 표현 중 일부만 들어가도 찾아올 수 있게 하기
     search_result = []
     post_eng_list = list(db.posts.find({"post_eng":{"$regex":post_search_receive}}, {'_id': 0}))
     post_kor_list = list(db.posts.find({"post_kor":{"$regex":post_search_receive}}, {'_id': 0}))
